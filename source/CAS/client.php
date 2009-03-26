@@ -659,6 +659,94 @@ class CASClient
 		return $this->_user;
 		}
 	
+//############################################################
+//####                              Ajout prise en compte des attributs dans le ticket CAS                               ####        
+//############################################################	
+	/**
+	 * The attributes of the Authenticated user. Written by CASClient::setAttributes(), read by CASClient::getAttribute($attributeName).
+	 * @attention client applications should use phpCAS::Attributes($attributeName).
+	 *
+	 * @hideinitializer
+	 * @private
+	 */
+	var $_attributes = array();
+	
+	/**
+	 * This method sets the CAS user's attributes.
+	 *
+	 * @param $array the array of attributes of the authenticated user.
+	 *
+	 * @private
+	 */
+	function setAttributes($array){
+		$this->_attributes = $array;
+	}
+	
+	/**
+	 * This method returns the CAS user's attributes.
+	 * @warning should be called only after CASClient::forceAuthentication() or 
+	 * CASClient::isAuthenticated(), otherwise halt with an error.
+	 *
+	 * @return the array of attributes of the authenticated user
+	 */
+	function getAttributes(){
+		if ( empty($this->_attributes) ) {
+			phpCAS::error('this method should be used only after '.__CLASS__.'::forceAuthentication() or '.__CLASS__.'::isAuthenticated()');
+		}
+		return $this->_attributes;
+		}
+	 
+	/**
+	 * This method returns a CAS user's attribute.
+	 * @warning should be called only after CASClient::forceAuthentication() or 
+	 * CASClient::isAuthenticated(), otherwise halt with an error.
+	 *
+	 * @return the attribute liste of the authenticated user
+	 * @private
+	 */
+	function addAttribute($attribute_name,$value){
+		// If multiple attributes exist, add as an array value
+		if (isset($this->_attributes[$attribute_name])) {
+			// Initialize the array with the existing value
+			if (!is_array($this->_attributes[$attribute_name])) {
+				$existingValue = $this->_attributes[$attribute_name];
+				$this->_attributes[$attribute_name] = array($existingValue);
+			}
+			
+			$this->_attributes[$attribute_name][] = $value;
+		} else {
+			$this->_attributes[$attribute_name] = $value; 
+		}
+	}
+
+	/**
+	 * This method returns a named CAS user's attribute.
+	 * @warning should be called only after CASClient::forceAuthentication() or 
+	 * CASClient::isAuthenticated(), otherwise halt with an error.
+	 *
+	 * @param attributeName the attribute that we are looking for
+	 * @return the attribute value of the authenticated user
+	 * @public
+	 */
+	function getAttribute($attribute_name){  
+		if ( empty($this->_user) ) {
+			phpCAS::error('this method should be used only after '.__CLASS__.'::forceAuthentication() or '.__CLASS__.'::isAuthenticated()');
+		}
+		if (sizeof($this->_attributes) == 0) {
+			phpCAS::error('there isn\'t any user\'s attributes defined in the ticket. ');
+		}
+		if (array_key_exists($attribute_name,$this->_attributes)) {
+			phpCAS::trace("return the attribute '".$attribute_name."' defined with the value '".$this->_attributes[$attribute_name]."'.");
+			return $this->_attributes[$attribute_name];
+		} else {
+			phpCAS::trace("the attribute '".$attribute_name."' requested is undefined - Check CAS attributes returned.");
+			return null;
+		}
+	}
+//############################################################
+//####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
+//############################################################
+		
 	/**
 	 * This method is called to renew the authentication of the user
 	 * If the user is authenticated, renew the connection
@@ -812,6 +900,13 @@ class CASClient
 						$_SESSION['phpCAS']['pgt'] = $this->getPGT();
 					}
 					$_SESSION['phpCAS']['user'] = $this->getUser();
+//############################################################
+//####                              Ajout prise en compte des attributs dans le ticket CAS                               ####        
+//############################################################
+			$_SESSION['phpCAS']['userAttributes'] = $this->getAttributes();
+//############################################################
+//####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
+//############################################################
 					$res = TRUE;
 				}
 				elseif ( $this->hasPT() ) {
@@ -825,6 +920,13 @@ class CASClient
 						$_SESSION['phpCAS']['pgt'] = $this->getPGT();
 					}
 					$_SESSION['phpCAS']['user'] = $this->getUser();
+//############################################################
+//####                              Ajout prise en compte des attributs dans le ticket CAS                               ####        
+//############################################################
+			$_SESSION['phpCAS']['userAttributes'] = $this->getAttributes();
+//############################################################
+//####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
+//############################################################
 					$res = TRUE;
 				}
 				else {
@@ -878,8 +980,17 @@ class CASClient
 			if ( $this->isSessionAuthenticated() && !empty($_SESSION['phpCAS']['pgt']) ) {
 				// authentication already done
 				$this->setUser($_SESSION['phpCAS']['user']);
+//############################################################
+//####                              Ajout prise en compte des attributs dans le ticket CAS                               ####        
+//############################################################
+				//$this->setPGT($_SESSION['phpCAS']['pgt']);
+				//phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', PGT = `'.$_SESSION['phpCAS']['pgt'].'\'');
+				$this->setAttributes($_SESSION['phpCAS']['userAttributes']);
 				$this->setPGT($_SESSION['phpCAS']['pgt']);
-				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', PGT = `'.$_SESSION['phpCAS']['pgt'].'\''); 
+				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', PGT = `'.$_SESSION['phpCAS']['pgt'].'\', attributes = `'.print_r($_SESSION['phpCAS']['userAttributes'], TRUE).'\''); 
+//############################################################
+//####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
+//############################################################
 				$auth = TRUE;
 			} elseif ( $this->isSessionAuthenticated() && empty($_SESSION['phpCAS']['pgt']) ) {
 				// these two variables should be empty or not empty at the same time
@@ -903,7 +1014,15 @@ class CASClient
 			if ( $this->isSessionAuthenticated() ) {
 				// authentication already done
 				$this->setUser($_SESSION['phpCAS']['user']);
-				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\''); 
+//############################################################
+//####                              Ajout prise en compte des attributs dans le ticket CAS                               ####        
+//############################################################
+				//phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\'');
+				$this->setAttributes($_SESSION['phpCAS']['userAttributes']);
+				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', attributes = `'.print_r($_SESSION['phpCAS']['userAttributes'], TRUE).'\'');
+//############################################################
+//####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
+//############################################################
 				$auth = TRUE;
 			} else {
 				phpCAS::trace('no user found');
@@ -1877,6 +1996,8 @@ class CASClient
 			$body = $buf;
 		}
 		
+		phpCAS::trace("Body: \n".$body);
+		
 		phpCAS::traceEnd($res);
 		return $res;
 	}
@@ -2107,7 +2228,17 @@ class CASClient
 				$validate_url,
 				TRUE/*$no_response*/);
 		}
-		
+//############################################################
+//####                              Ajout prise en compte des attributs dans le ticket CAS                               ####        
+//####                                                            Encodage UTF8                                                        ####        
+//############################################################		
+		$text_response = utf8_encode($text_response);
+		//$text_response = htmlspecialchars($text_response);
+		//phpCAS::trace ("REPONSE : ".$text_response);
+//############################################################
+//####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
+//####                                                Fin ajout encodage UTF8                                                      ####
+//############################################################	
 		// read the response of the CAS server into a DOM object
 		if ( !($dom = domxml_open_mem($text_response))) {
 			// read failed
@@ -2144,6 +2275,23 @@ class CASClient
 					FALSE/*$no_response*/,
 					TRUE/*$bad_response*/,
 					$text_response);
+//############################################################
+//####                              Ajout prise en compte des attributs dans le ticket CAS                               ####        
+//############################################################
+				phpCAS::trace ("only the user attribute is defined");
+			} else {
+				phpCAS::trace ("several user's attributes are defined");
+				if (sizeof($list_attributes = $tree_response->get_elements_by_tagname("attribute")) != 0) {
+					foreach ($list_attributes as $attribute) {
+						if ($attribute->has_attribute("name") && $attribute->has_attribute("value")) {
+							$this->addAttribute(trim(utf8_decode($attribute->get_attribute("name"))),trim(utf8_decode($attribute->get_attribute("value"))));
+							//phpCAS::trace ('attribute : '.$attribute->get_attribute("name").' value : '.$attribute->get_attribute("value") );						
+						}
+					}
+				}			
+//############################################################
+//####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
+//############################################################
 			}
 			$this->setUser(trim($arr[0]->get_content()));
 			
