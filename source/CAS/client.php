@@ -880,6 +880,13 @@ class CASClient
 				$this->setUser($_SESSION['phpCAS']['user']);
 				$this->setPGT($_SESSION['phpCAS']['pgt']);
 				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', PGT = `'.$_SESSION['phpCAS']['pgt'].'\''); 
+				
+				// Include the list of proxies
+				if (isset($_SESSION['phpCAS']['proxies'])) {
+					$this->setProxies($_SESSION['phpCAS']['proxies']);
+					phpCAS::trace('proxies = "'.implode('", "', $_SESSION['phpCAS']['proxies']).'"'); 
+				}
+				
 				$auth = TRUE;
 			} elseif ( $this->isSessionAuthenticated() && empty($_SESSION['phpCAS']['pgt']) ) {
 				// these two variables should be empty or not empty at the same time
@@ -904,6 +911,13 @@ class CASClient
 				// authentication already done
 				$this->setUser($_SESSION['phpCAS']['user']);
 				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\''); 
+				
+				// Include the list of proxies
+				if (isset($_SESSION['phpCAS']['proxies'])) {
+					$this->setProxies($_SESSION['phpCAS']['proxies']);
+					phpCAS::trace('proxies = "'.implode('", "', $_SESSION['phpCAS']['proxies']).'"'); 
+				}
+				
 				$auth = TRUE;
 			} else {
 				phpCAS::trace('no user found');
@@ -2073,6 +2087,43 @@ class CASClient
 	function hasPT()
 		{ return !empty($this->_pt); }
 	
+	
+	/**
+	 * This array will store a list of proxies in front of this application. This
+	 * property will only be populated if this script is being proxied rather than
+	 * accessed directly.
+	 *
+	 * It is set in CASClient::validatePT() and can be read by CASClient::getProxies()
+	 * @access private
+	 */
+	var $_proxies = array();
+	
+	/**
+	 * Answer an array of proxies that are sitting in front of this application.
+	 *
+	 * This method will only return a non-empty array if we have received and validated
+	 * a Proxy Ticket.
+	 * 
+	 * @return array
+	 * @access public
+	 * @since 6/25/09
+	 */
+	function getProxies () {
+		return $this->_proxies;
+	}
+	
+	/**
+	 * Set the Proxy Array
+	 * 
+	 * @param array $proxies
+	 * @return void
+	 * @access public
+	 * @since 6/25/09
+	 */
+	public function setProxies ($proxies) {
+		$this->_proxies = $proxies;
+	}
+	
 	/** @} */
 	// ########################################################################
 	//  PT VALIDATION
@@ -2107,6 +2158,8 @@ class CASClient
 				$validate_url,
 				TRUE/*$no_response*/);
 		}
+		
+		phpCAS::trace("PT Validation Response:\n".$text_response);
 		
 		// read the response of the CAS server into a DOM object
 		if ( !($dom = domxml_open_mem($text_response))) {
@@ -2146,6 +2199,15 @@ class CASClient
 					$text_response);
 			}
 			$this->setUser(trim($arr[0]->get_content()));
+			
+			// Store the proxies we are sitting behind for authorization checking
+			if ( sizeof($arr = $tree_response->get_elements_by_tagname("proxy")) > 0) {
+				foreach ($arr as $proxyElem) {
+					phpCAS::trace("Storing Proxy: ".$proxyElem->get_content());
+					$this->_proxies[] = trim($proxyElem->get_content());
+				}
+				$_SESSION['phpCAS']['proxies'] = $this->_proxies;
+			}
 			
 		} else if ( sizeof($arr = $tree_response->get_elements_by_tagname("authenticationFailure")) != 0) {
 			// authentication succeded, extract the error code and message
