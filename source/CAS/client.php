@@ -985,7 +985,8 @@ class CASClient
 //############################################################
 				//$this->setPGT($_SESSION['phpCAS']['pgt']);
 				//phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', PGT = `'.$_SESSION['phpCAS']['pgt'].'\'');
-				$this->setAttributes($_SESSION['phpCAS']['userAttributes']);
+				if (isset($_SESSION['phpCAS']['userAttributes']))
+					$this->setAttributes($_SESSION['phpCAS']['userAttributes']);
 				$this->setPGT($_SESSION['phpCAS']['pgt']);
 				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', PGT = `'.$_SESSION['phpCAS']['pgt'].'\', attributes = `'.print_r($_SESSION['phpCAS']['userAttributes'], TRUE).'\''); 
 //############################################################
@@ -1025,8 +1026,9 @@ class CASClient
 //####                              Ajout prise en compte des attributs dans le ticket CAS                               ####        
 //############################################################
 				//phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\'');
-				$this->setAttributes($_SESSION['phpCAS']['userAttributes']);
 				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', attributes = `'.print_r($_SESSION['phpCAS']['userAttributes'], TRUE).'\'');
+				if (isset($_SESSION['phpCAS']['userAttributes']))
+					$this->setAttributes($_SESSION['phpCAS']['userAttributes']);
 //############################################################
 //####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
 //############################################################
