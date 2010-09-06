@@ -472,7 +472,7 @@ class phpCAS
 		if ( is_array($dbg) ) {
 			for ( $i=1; $i<sizeof($dbg); $i++) {
 				if ( is_array($dbg[$i]) ) {
-					if ( $dbg[$i]['class'] == __CLASS__ ) {
+					if (isset($dbg[$i]['class']) && $dbg[$i]['class'] == __CLASS__ ) {
 						$function = $dbg[$i]['function'];
 						$file = $dbg[$i]['file'];
 						$line = $dbg[$i]['line'];
@@ -739,7 +739,7 @@ class phpCAS
 		if ( gettype($table) != 'string' ) {
 			phpCAS::error('type mismatched for parameter $table (should be `string\')');
 		}
-		$PHPCAS_CLIENT->setPGTStorageDB($this,$user,$password,$hostname,$port,$database,$table);
+		$PHPCAS_CLIENT->setPGTStorageDB($user,$password,$hostname,$port,$database,$table);
 		phpCAS::traceEnd();
 		}
 	
