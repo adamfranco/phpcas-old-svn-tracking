@@ -746,7 +746,7 @@ class CASClient
 //############################################################
 //####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
 //############################################################
-		
+
 	/**
 	 * This method is called to renew the authentication of the user
 	 * If the user is authenticated, renew the connection
@@ -988,10 +988,10 @@ class CASClient
 				if (isset($_SESSION['phpCAS']['userAttributes']))
 					$this->setAttributes($_SESSION['phpCAS']['userAttributes']);
 				$this->setPGT($_SESSION['phpCAS']['pgt']);
-				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', PGT = `'.$_SESSION['phpCAS']['pgt'].'\', attributes = `'.print_r($_SESSION['phpCAS']['userAttributes'], TRUE).'\''); 
 //############################################################
 //####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
 //############################################################
+				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', PGT = `'.$_SESSION['phpCAS']['pgt'].'\'');
 				
 				// Include the list of proxies
 				if (isset($_SESSION['phpCAS']['proxies'])) {
@@ -1026,12 +1026,12 @@ class CASClient
 //####                              Ajout prise en compte des attributs dans le ticket CAS                               ####        
 //############################################################
 				//phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\'');
-				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\', attributes = `'.print_r($_SESSION['phpCAS']['userAttributes'], TRUE).'\'');
 				if (isset($_SESSION['phpCAS']['userAttributes']))
 					$this->setAttributes($_SESSION['phpCAS']['userAttributes']);
 //############################################################
 //####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
 //############################################################
+				phpCAS::trace('user = `'.$_SESSION['phpCAS']['user'].'\'');
 				
 				// Include the list of proxies
 				if (isset($_SESSION['phpCAS']['proxies'])) {
@@ -1740,7 +1740,7 @@ class CASClient
 		}
 		
 		// create the storage object
-		$this->_pgt_storage = &new PGTStorageFile($this,$format,$path);
+		$this->_pgt_storage = new PGTStorageFile($this,$format,$path);
 		}
 	
 	/**
@@ -1777,7 +1777,7 @@ class CASClient
 		trigger_error('PGT storage into database is an experimental feature, use at your own risk',E_USER_WARNING);
 		
 		// create the storage object
-		$this->_pgt_storage = & new PGTStorageDB($this,$user,$password,$database_type,$hostname,$port,$database,$table);
+		$this->_pgt_storage = new PGTStorageDB($this,$user,$password,$database_type,$hostname,$port,$database,$table);
 		}
 	
 	// ########################################################################
@@ -2292,9 +2292,7 @@ class CASClient
 //####                          Fin ajout prise en compte des attributs dans le ticket CAS                              ####
 //####                                                Fin ajout encodage UTF8                                                      ####
 //############################################################	
-		
-		phpCAS::trace("PT Validation Response:\n".$text_response);
-		
+
 		// read the response of the CAS server into a DOM object
 		if ( !($dom = domxml_open_mem($text_response))) {
 			// read failed
