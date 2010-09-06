@@ -1295,6 +1295,25 @@ class phpCAS
 		}
 		return($PHPCAS_CLIENT->retrievePT($target_service,$err_code,$err_msg));
 		}
+		
+	/**
+	 * Answer an array of proxies that are sitting in front of this application.
+	 *
+	 * This method will only return a non-empty array if we have received and validated
+	 * a Proxy Ticket.
+	 * 
+	 * @return array
+	 * @access public
+	 * @since 6/25/09
+	 */
+	public static function getProxies () {
+		global $PHPCAS_CLIENT;
+		if ( !is_object($PHPCAS_CLIENT) ) {
+			phpCAS::error('this method should only be called after '.__CLASS__.'::client()');
+		}  
+		
+		return($PHPCAS_CLIENT->getProxies());
+	}
 	
 	/**
 	 * Set the certificate of the CAS server.
